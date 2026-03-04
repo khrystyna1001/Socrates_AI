@@ -30,8 +30,8 @@ async def query_system(request: QueryRequest):
     bart_rag_system.create_embeddings_and_vector_db(chunks=chunks)
     bart_rag_system.setup_rag_chain()
     
-    answer, relevant_docs = bart_rag_system.process_query(request.question)
-    return {"answer": answer, "sources": [doc.page_content for doc in relevant_docs]}
+    result, contexts = bart_rag_system.process_query(request.question)
+    return {"answer": result, "sources": [doc["content"] for doc in contexts]}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000)
