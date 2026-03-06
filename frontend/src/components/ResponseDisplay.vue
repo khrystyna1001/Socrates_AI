@@ -1,64 +1,45 @@
 <template>
-  <Transition name="fade-up">
-    <section v-if="response || isLoading" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="p-8">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-3">
-            <div class="p-2 bg-blue-50 rounded-lg">
-              <MessageSquare class="w-5 h-5 text-blue-600" />
-            </div>
-            <h2 class="font-bold text-slate-800">Response</h2>
+  <div v-if="sources.length > 0" class="mt-8 pt-6 border-t border-slate-100">
+    <div class="flex items-center gap-2 mb-4">
+      <Quote class="w-4 h-4 text-slate-400" />
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Grounding Sources</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div 
+        v-for="(source, index) in sources" 
+        :key="index"
+        class="group flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-white hover:border-blue-400 hover:shadow-md transition-all duration-300"
+      >
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="p-1.5 bg-blue-50 rounded-lg text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <FileText class="w-4 h-4" />
           </div>
+          <span class="text-sm font-semibold text-slate-700 truncate">
+            {{ source.filename }}
+          </span>
         </div>
 
-        <div v-if="isLoading" class="space-y-4">
-          <div class="h-4 bg-slate-100 rounded-full w-3/4 animate-pulse"></div>
-          <div class="h-4 bg-slate-100 rounded-full w-full animate-pulse"></div>
-          <div class="h-4 bg-slate-100 rounded-full w-5/6 animate-pulse"></div>
-        </div>
-
-        <div v-else class="animate-in fade-in slide-in-from-bottom-2 duration-700">
-          <p class="text-slate-700 leading-relaxed text-lg whitespace-pre-wrap">
-            {{ response }}
-          </p>
-
-          <div v-if="sources.length > 0" class="mt-8 pt-6 border-t border-slate-100">
-            <div class="flex items-center gap-2 mb-4">
-              <Quote class="w-4 h-4 text-slate-400" />
-              <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Grounding Sources</span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <div 
-                v-for="(source, index) in sources" 
-                :key="index"
-                class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-white hover:border-blue-300 transition-colors cursor-default"
-              >
-                {{ source }}
-              </div>
-            </div>
-          </div>
+        <div class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-[10px] font-black uppercase tracking-tighter whitespace-nowrap border border-blue-200">
+          PG {{ source.page }}
         </div>
       </div>
-    </section>
-  </Transition>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { MessageSquare, Quote } from 'lucide-vue-next'
+import { MessageSquare, Quote, FileText } from 'lucide-vue-next'
+
+// Define the interface for the structured source object
+interface Source {
+  filename: string
+  page: string | number
+}
 
 defineProps<{
   response: string
   isLoading: boolean
-  sources: string[]
+  sources: any[]
 }>()
 </script>
-
-<style scoped>
-.fade-up-enter-active, .fade-up-leave-active {
-  transition: all 0.4s ease-out;
-}
-.fade-up-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-</style>
