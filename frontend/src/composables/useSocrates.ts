@@ -1,12 +1,14 @@
 import { ref } from 'vue'
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8000'
+
+const API_BASE_URL = import.meta.env.API_BASE_URL || 'http://localhost:8000'
 
 // Define exactly what a Source looks like
 export interface Source {
   filename: string;
   page: number | string;
+  content: string;
 }
 
 export interface ChatMessage {

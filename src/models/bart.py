@@ -47,7 +47,7 @@ class BARTRAGSystem:
                     page_content=content,
                     metadata={
                         "source": filename, 
-                        "page": page_num\
+                        "page": page_num
                     }
                 )
                 documents.append(doc)
@@ -124,13 +124,14 @@ class BARTRAGSystem:
         
         for doc in source_docs:
             fname = doc.metadata.get("source", "Unknown File")
-            page = doc.metadata.get("page", "?")
+            page = doc.metadata.get("page") or "N/A"
             
             unique_id = f"{fname}-{page}"
             if unique_id not in seen:
                 formatted_sources.append({
                     "filename": fname,
-                    "page": page
+                    "page": page,
+                    "content": doc.page_content[:500] + "..." if len(doc.page_content) > 500 else doc.page_content
                 })
                 seen.add(unique_id)
         

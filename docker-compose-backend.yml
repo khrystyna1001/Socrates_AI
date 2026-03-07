@@ -8,12 +8,12 @@ services:
     volumes:
       - ./sources:/app/sources:ro
     environment:
-      - DATABASE_URL=postgresql://taskuser:supersecretpassword@host.docker.internal:5432/taskmaster
-      - SECRET_KEY=your-secret-jwt-key-change-in-production
-      - ENVIRONMENT=development
-      - PDF_PATH=/app/sources
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
-      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - PDF_PATH=${PDF_PATH}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     networks:
       - taskmaster-network
     restart: unless-stopped
