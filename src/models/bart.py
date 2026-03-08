@@ -70,30 +70,34 @@ class BARTRAGSystem:
         return self.db
 
     def setup_rag_chain(self):
-        """Initialize the RAG conversation chain."""
+        """Initialize the RAG conversation chain with a humanized persona."""
         ollama_base_url = os.getenv("OLLAMA_BASE_URL")
+        
         eval_llm = OllamaLLM(
             model=self.llm_model_name, 
             base_url=ollama_base_url if ollama_base_url else None
         )
         
-        # NEW: Specific instructions for the response structure
-        QA_PROMPT_TEMPLATE = """Use the following pieces of context to answer the user's question. 
-        Your response MUST follow this structure:
-        1. Start with a section titled "SUMMARY OF GROUND TRUTHS" which summarizes the key facts from the provided context.
-        2. Follow with a section titled "ANSWER" that directly addresses the user's question based on those truths.
-
+        QA_PROMPT_TEMPLATE = """
         Context: {context}
-        Question: {question}
         
-        Helpful Response:"""
+        Question: {question}
+
+        Answer:"""
         
         QA_PROMPT = PromptTemplate(
-            template=QA_PROMPT_TEMPLATE, input_variables=["context", "question"]
+            template=QA_PROMPT_TEMPLATE, 
+            input_variables=["context", "question"]
         )
 
         CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(
-            "Rephrase the follow-up question as a standalone question. History: {chat_history} Input: {question}"
+            """Given the following conversation and a new question, 
+            rephrase the question so it can be understood on its own, 
+            maintaining the original's intent and tone.
+            
+            Chat History: {chat_history}
+            Follow Up: {question}
+            Standalone question:"""
         )
         
         self.qa_chain = ConversationalRetrievalChain.from_llm(
@@ -104,6 +108,7 @@ class BARTRAGSystem:
             return_source_documents=True, 
             verbose=False
         )
+        
         return self.qa_chain
 
     def initialize_evaluation_models(self):
@@ -112,30 +117,43 @@ class BARTRAGSystem:
         self.bart_tokenizer = BartTokenizer.from_pretrained(self.bart_model_name)
         self.bert_scorer = BERTScorer(lang="en", rescale_with_baseline=True)
 
-    def process_query(self, query):
-        """Process a single query and return structured source objects."""
-        chat_history = []
-        result = self.qa_chain.invoke({"question": query, "chat_history": chat_history})
+
+    def process_query(self, query, chat_history=None):
+        """
+        Process a query naturally using the LLM's persona, 
+        maintaining a conversational flow.
+        """
+        if chat_history is None:
+            chat_history = []
+
+        result = self.qa_chain.invoke({
+            "question": query, 
+            "chat_history": chat_history
+        })
         
+        answer = result.get("answer", "I'm sorry, I couldn't find an answer to that.")
         source_docs = result.get("source_documents", [])
         
         formatted_sources = []
         seen = set()
         
         for doc in source_docs:
-            fname = doc.metadata.get("source", "Unknown File")
+            path = doc.metadata.get("source", "Unknown Source")
+            filename = os.path.basename(path)
             page = doc.metadata.get("page") or "N/A"
             
-            unique_id = f"{fname}-{page}"
+            unique_id = f"{filename}-{page}"
             if unique_id not in seen:
                 formatted_sources.append({
-                    "filename": fname,
+                    "filename": filename,
                     "page": page,
                     "content": doc.page_content[:500] + "..." if len(doc.page_content) > 500 else doc.page_content
                 })
                 seen.add(unique_id)
+
+        chat_history.append((query, answer))
         
-        return result["answer"], formatted_sources
+        return answer, formatted_sources, chat_history
         
     def evaluate_responses(self, results):
         """Evaluate responses using BART and BERT scores."""
