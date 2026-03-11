@@ -10,10 +10,13 @@ async def query_system(request: QueryRequest, raw_request: Request):
     if not rag_app:
         raise HTTPException(status_code=503, detail="RAG system not initialized")
     
-    result, contexts, chat_history = rag_app.process_query(request.question)
+    answer, sources, updated_history = rag_app.process_query(
+        query=request.question, 
+        chat_history=request.chat_history
+    )
     
     return {
-        "answer": result, 
-        "sources": contexts,
-        "chat_history": chat_history
+        "answer": answer, 
+        "sources": sources,
+        "chat_history": updated_history
     }

@@ -11,7 +11,6 @@ from .models.bart import BARTRAGSystem
 
 logger = logging.getLogger(__name__)
 
-# Setup lifespan to initialize RAG system once on startup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     pdf_path = os.getenv("PDF_PATH", "/app/sources")
@@ -36,7 +35,9 @@ app.include_router(bart.router)
 
 # CORS
 origins = [
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://0.0.0.0:5173"
 ]
 
 app.add_middleware(

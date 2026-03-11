@@ -17,8 +17,8 @@ engine = create_engine(
     DATABASE_URL,
     pool_size=10,
     max_overflow=20,
-    pool_pre_ping=True,  # Validates connections before use
-    echo=True  # Set to False in production
+    pool_pre_ping=True,
+    echo=True
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

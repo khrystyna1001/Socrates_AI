@@ -7,16 +7,16 @@ services:
       - "8000:8000"
     volumes:
       - ./sources:/app/sources:ro
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - SECRET_KEY=${SECRET_KEY}
-      - ENVIRONMENT=${ENVIRONMENT}
-      - PDF_PATH=${PDF_PATH}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS}
+    env_file:
+      - .env
+    
     networks:
       - taskmaster-network
-    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./src
+          target: /app/src
 
 networks:
   taskmaster-network:

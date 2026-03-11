@@ -12,6 +12,7 @@ from bert_score import BERTScorer
 import torch
 import psycopg2
 import os
+import requests
 
 class BARTRAGSystem:
     def __init__(self, pdf_path="../sources", embedding_model='sentence-transformers/all-MiniLM-L6-v2', 
@@ -28,33 +29,46 @@ class BARTRAGSystem:
 
     def get_documents(self):
         """Fetch PDF content from PostgreSQL and convert to LangChain Documents."""
-        database_url = os.getenv("DATABASE_URL")
-        if not database_url:
-            raise ValueError("DATABASE_URL environment variable is not set.")
+        API_KEY = os.getenv("GUTENBERG_API_KEY")
 
+        if not API_KEY:
+            raise ValueError("GUTENBERG_API_KEY environment variable is not set.")
+        
         documents = []
         try:
-            conn = psycopg2.connect(database_url)
-            cur = conn.cursor()
-            
-            query = "SELECT filename, content_text, page_number FROM pdf_documents;"
-            cur.execute(query)
-            rows = cur.fetchall()
+            request_url = os.getenv("GUTENBERG_API_URL")
+            headers = {'x-rapidapi-host': os.getenv("GUTENBERG_API_HOST"),
+                       'x-rapidapi-key': API_KEY}
+            books = requests.get(request_url, headers=headers)
 
             documents = []
-            for filename, content, page_num in rows:
+
+            books_data = books.json()
+            books_list = books_data.get('results', [])
+
+            for book in books_list:
+                book_id = book.get("id")
+                book_id = int(str(book_id)[:4])
+                
+                book_text = requests.get(f"https://project-gutenberg-free-books-api1.p.rapidapi.com/books/{book_id}/text?cleaning_mode=simple", headers=headers)
+                book_text_data = book_text.json()
+
+                if book_text.status_code != 200:
+                    print(f"Failed to fetch {book_id}: {book_text.status_code} - {book_text.text}")
+                    continue
+
+                content = book_text_data.get("text")
+                file_name = book.get("title")
+                page = book.get("page")
+                
                 doc = Document(
                     page_content=content,
                     metadata={
-                        "source": filename, 
-                        "page": page_num
+                        "source": file_name,
+                        "page": page
                     }
                 )
                 documents.append(doc)
-
-            cur.close()
-            conn.close()
-            
 
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             chunks = text_splitter.split_documents(documents)
@@ -62,6 +76,41 @@ class BARTRAGSystem:
 
         except Exception as e:
             raise RuntimeError(f"Error fetching documents from database: {str(e)}")
+        # database_url = os.getenv("DATABASE_URL")
+        # if not database_url:
+        #     raise ValueError("DATABASE_URL environment variable is not set.")
+
+        # documents = []
+        # try:
+        #     conn = psycopg2.connect(database_url)
+        #     cur = conn.cursor()
+            
+        #     query = "SELECT filename, content_text, page_number FROM pdf_documents;"
+        #     cur.execute(query)
+        #     rows = cur.fetchall()
+
+        #     documents = []
+        #     for filename, content, page_num in rows:
+        #         doc = Document(
+        #             page_content=content,
+        #             metadata={
+        #                 "source": filename, 
+        #                 "page": page_num
+        #             }
+        #         )
+        #         documents.append(doc)
+
+        #     cur.close()
+        #     conn.close()
+            
+
+        #     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        #     chunks = text_splitter.split_documents(documents)
+        #     return chunks
+
+        # except Exception as e:
+        #     raise RuntimeError(f"Error fetching documents from database: {str(e)}")
+        
 
     def create_embeddings_and_vector_db(self, chunks):
         """Create embeddings and build FAISS vector database."""
@@ -138,8 +187,13 @@ class BARTRAGSystem:
         seen = set()
         
         for doc in source_docs:
-            path = doc.metadata.get("source", "Unknown Source")
-            filename = os.path.basename(path)
+            raw_source = doc.metadata.get("source") or "Unknown_Source"
+            
+            if isinstance(raw_source, str) and ("/" in raw_source or "\\" in raw_source):
+                filename = os.path.basename(raw_source)
+            else:
+                filename = str(raw_source)
+                
             page = doc.metadata.get("page") or "N/A"
             
             unique_id = f"{filename}-{page}"
