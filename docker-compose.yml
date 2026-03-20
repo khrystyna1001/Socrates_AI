@@ -31,8 +31,8 @@ services:
 
   celery:
     build: ./src
-    working_dir: /app
-    command: uv run celery -A main.celery:app worker -l info
+    working_dir: /app/main
+    command: uv run celery -A backend worker -l info
     volumes:
       - ./src/:/app
     depends_on:
@@ -41,17 +41,19 @@ services:
 
   celery-beat:
     build: ./src
-    working_dir: /app
-    command: uv run celery -A main.celery:app beat -l info
+    working_dir: /app/main
+    command: uv run celery -A backend beat -l info
     volumes:
       - ./src/:/app
     depends_on:
       - rabbitmq
 
   db:
-    image: postgres:16.5
+    image: ankane/pgvector
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    ports:
+    - "5432:5432"
     env_file:
       - .env
     environment:
