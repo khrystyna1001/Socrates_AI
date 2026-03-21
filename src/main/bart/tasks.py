@@ -5,26 +5,6 @@ from django.conf import settings
 from .models import Book
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
-@shared_task
-def fetch_api_results(url, headers):
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    results = response.json().get('results', [])
-    
-    filter_missing_books.delay(results)
-    return f"Fetched {len(results)} books from API."
-
-@shared_task
-def filter_missing_books(api_books):
-    existing_ids = set(Book.objects.filter(
-        id__in=[b['id'] for b in api_books]
-    ).values_list('id', flat=True))
-
-    for book_data in api_books:
-        if book_data['id'] not in existing_ids:
-            generate_huggingface_embedding.delay(book_data)
-            
-    return "Filtering complete. Dispatched new books to Hugging Face."
 
 @shared_task
 def generate_huggingface_embedding(book_data):
