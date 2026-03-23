@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import Book
+from .models import BARTModel
 
-class BookSerializer(serializers.ModelSerializer):
+class BARTSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Book
-        fields = ['id', 'content', 'page_number']
+        model = BARTModel
+        fields = '__all__'
