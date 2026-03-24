@@ -83,7 +83,7 @@ services:
       /bin/sh -c "
       /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
       /usr/bin/mc mb --quiet myminio/docs;
-      /usr/bin/mc policy set none myminio/docs;
+      /usr/bin/mc policy set download myminio/docs;
       "
 
 

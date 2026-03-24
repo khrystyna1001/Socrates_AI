@@ -30,7 +30,7 @@ const uploadFile = async () => {
 
   try {
     uploading.value = true;
-    const response = await axios.post('http://localhost:8000/api/', formData, {
+    const response = await axios.post('http://localhost:8000/api/docs/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     

@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'storages',
+    'pgvector',
     
     # Local
     'bart',
@@ -30,7 +31,7 @@ INSTALLED_APPS = [
 
 # --- MIDDLEWARE ---
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -44,7 +45,32 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://0.0.0.0:5173",
+    "http://localhost:9000",
+    "http://127.0.0.1:9000",
+    "http://0.0.0.0:9000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8000",
 ]
+
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+)
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -77,6 +103,7 @@ DATABASES = {
 }
 
 # --- MINIO / S3 STORAGE ---
+S3_ENDPOINT = os.getenv("S3_ENDPOINT_URL")
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://minio:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ROOT_USER")
 MINIO_SECRET_KEY = os.getenv("MINIO_ROOT_PASSWORD")
@@ -88,10 +115,12 @@ STORAGES = {
         "OPTIONS": {
             "access_key": MINIO_ACCESS_KEY,
             "secret_key": MINIO_SECRET_KEY,
-            "endpoint_url": MINIO_ENDPOINT,
+            "endpoint_url": S3_ENDPOINT,
             "bucket_name": MINIO_BUCKET,
             "region_name": "us-east-1",
             "file_overwrite": False,
+            'signature_version': 's3v4',
+            'addressing_style': 'path',
         },
     },
     "staticfiles": {
@@ -105,7 +134,7 @@ STATIC_URL = '/static/'
 
 # --- CELERY ---
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')
-CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_BACKEND = 'db'
 CELERY_TIMEZONE = "Australia/Tasmania"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
