@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'storages',
     'pgvector',
+    'django_celery_results',
     
     # Local
     'bart',
@@ -134,7 +135,7 @@ STATIC_URL = '/static/'
 
 # --- CELERY ---
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')
-CELERY_RESULT_BACKEND = 'db'
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TIMEZONE = "Australia/Tasmania"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
