@@ -22,6 +22,6 @@ staticfiles/
 .idea/
 .vscode/
 
-# Env files (keep secrets out of Git)
+# Env files
 .env
-.env.*
+.env.*.env

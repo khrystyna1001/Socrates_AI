@@ -1,16 +1,18 @@
 import re
-from django.db import models, migrations
-from pgvector.django import VectorField, VectorExtension, HnswIndex, CosineDistance
+from django.db import models
+from pgvector.django import VectorField, HnswIndex
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama.llms import OllamaLLM
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_huggingface import HuggingFaceEmbeddings
+from django_minio_backend import MinioBackend, iso_date_prefix
+from .storages import get_public_storage, get_private_storage
 
 
 # Create your models here.
 
 class BARTModel(models.Model):
-    document = models.FileField(upload_to="docs")
+    document = models.FileField(verbose_name="Document Upload",
+                                       storage=get_private_storage, upload_to="docs")
 
     def process_and_save_chunks(self, embedding_engine):
         llm = OllamaLLM(model="deepseek-r1:latest")

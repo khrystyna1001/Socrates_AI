@@ -10,6 +10,7 @@ dependencies = [
     "django>=6.0.3",
     "django-celery-results>=2.6.0",
     "django-cors-headers>=4.9.0",
+    "django-minio-backend>=4.5.0",
     "django-storages>=1.14.6",
     "djangorestframework>=3.17.0",
     "langchain>=1.2.13",

@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+from datetime import timedelta
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
+    'django_minio_backend.apps.DjangoMinioBackendConfig',
     
     # Third Party
     'rest_framework',
@@ -110,22 +113,35 @@ MINIO_ACCESS_KEY = os.getenv("MINIO_ROOT_USER")
 MINIO_SECRET_KEY = os.getenv("MINIO_ROOT_PASSWORD")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET_NAME", "docs")
 
+RAW_ENDPOINT = os.getenv("S3_ENDPOINT", "play.min.io").replace("http://", "").replace("https://", "")
+
+MINIO_COMMON_OPTIONS = {
+    "MINIO_ENDPOINT": RAW_ENDPOINT,
+    "MINIO_ACCESS_KEY": os.getenv("MINIO_ROOT_USER"),
+    "MINIO_SECRET_KEY": os.getenv("MINIO_ROOT_PASSWORD"),
+    "MINIO_USE_HTTPS": True,
+    "MINIO_REGION": "us-east-1",
+    "MINIO_URL_EXPIRY_HOURS": timedelta(days=1),
+    "MINIO_CONSISTENCY_CHECK_ON_START": True,
+}
+
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
+        "BACKEND": "django_minio_backend.models.MinioBackend",
         "OPTIONS": {
-            "access_key": MINIO_ACCESS_KEY,
-            "secret_key": MINIO_SECRET_KEY,
-            "endpoint_url": S3_ENDPOINT,
-            "bucket_name": MINIO_BUCKET,
-            "region_name": "us-east-1",
-            "file_overwrite": False,
-            'signature_version': 's3v4',
-            'addressing_style': 'path',
+            **MINIO_COMMON_OPTIONS,
+
+            "MINIO_DEFAULT_BUCKET": os.getenv("MINIO_BUCKET_NAME", "docs"), 
+            "MINIO_PRIVATE_BUCKETS": ["django-backend-dev-private"],
+            "MINIO_PUBLIC_BUCKETS": [os.getenv("MINIO_BUCKET_NAME", "docs")],
         },
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "django_minio_backend.models.MinioBackendStatic",
+        "OPTIONS": {
+            **MINIO_COMMON_OPTIONS,
+            "MINIO_STATIC_FILES_BUCKET": "static",
+        },
     },
 }
 
