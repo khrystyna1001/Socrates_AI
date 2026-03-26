@@ -1,16 +1,16 @@
 FROM python:3.12-slim
 
-ARG HF_TOKEN
-RUN echo "${HF_TOKEN}"
-
 WORKDIR /app
+
+ARG HF_TOKEN
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
     UV_PROJECT_ENVIRONMENT=/.venv \
-    HF_DEBUG=1
+    HF_DEBUG=1 \
+    HF_TOKEN=${HF_TOKEN}
 
 COPY --from=ghcr.io/astral-sh/uv:0.8.14 /uv /uvx /bin/
 
@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache \
     --frozen \
     --no-install-project
 
-RUN uvx --from huggingface_hub hf auth login && \
-    uvx --from huggingface_hub hf download "all-MiniLM-L6-v2" 
+RUN uvx --from huggingface_hub hf auth login --token ${HF_TOKEN} && \
+    uvx --from huggingface_hub hf download sentence-transformers/all-MiniLM-L6-v2
 
 COPY . .

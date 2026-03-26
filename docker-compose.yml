@@ -32,7 +32,10 @@ services:
       RABBITMQ_DEFAULT_PASS: "guest"
 
   celery:
-    build: ./src
+    build: 
+      context: ./src
+      args: 
+        HF_TOKEN: ${HF_TOKEN}
     working_dir: /app/main
     command: uv run celery -A backend worker -l info
     volumes:
@@ -42,7 +45,10 @@ services:
       - rabbitmq
 
   celery-beat:
-    build: ./src
+    build: 
+      context: ./src
+      args: 
+        HF_TOKEN: ${HF_TOKEN}
     working_dir: /app/main
     command: uv run celery -A backend beat -l info
     volumes:
@@ -66,6 +72,8 @@ services:
   minio:
     image: minio/minio
     hostname: "minio"
+    volumes:
+      - minio:/minio_files
     env_file:
       - .env
     command: 'minio server /minio_files --console-address ":9001"'
@@ -89,3 +97,4 @@ services:
 
 volumes:
   postgres_data:
+  minio_files:
