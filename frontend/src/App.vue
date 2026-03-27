@@ -1,10 +1,9 @@
-<template>
+<template lang="">
   <div>
-    <h1>My Dashboard</h1>
-    <MinioUploader />
+    <Header />
   </div>
 </template>
 
 <script setup>
-import MinioUploader from './components/MinioUploader.vue';
+import Header from './components/Header.vue';
 </script>
