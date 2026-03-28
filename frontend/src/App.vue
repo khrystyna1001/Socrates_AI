@@ -1,9 +1,11 @@
 <template lang="">
-  <div>
-    <Header />
-  </div>
+
+  <RouterView />
+  
 </template>
 
-<script setup>
-import Header from './components/Header.vue';
+<script>
+import { RouterView } from 'vue-router';
+
+
 </script>

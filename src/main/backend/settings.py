@@ -20,7 +20,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
-    'django_minio_backend.apps.DjangoMinioBackendConfig',
     
     # Third Party
     'rest_framework',
@@ -31,6 +30,7 @@ INSTALLED_APPS = [
     
     # Local
     'bart',
+    'documents',
 ]
 
 # --- MIDDLEWARE ---
@@ -113,37 +113,15 @@ MINIO_ACCESS_KEY = os.getenv("MINIO_ROOT_USER")
 MINIO_SECRET_KEY = os.getenv("MINIO_ROOT_PASSWORD")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET_NAME", "docs")
 
-RAW_ENDPOINT = os.getenv("S3_ENDPOINT", "play.min.io").replace("http://", "").replace("https://", "")
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-MINIO_COMMON_OPTIONS = {
-    "MINIO_ENDPOINT": RAW_ENDPOINT,
-    "MINIO_ACCESS_KEY": os.getenv("MINIO_ROOT_USER"),
-    "MINIO_SECRET_KEY": os.getenv("MINIO_ROOT_PASSWORD"),
-    "MINIO_USE_HTTPS": True,
-    "MINIO_REGION": "us-east-1",
-    "MINIO_URL_EXPIRY_HOURS": timedelta(days=1),
-    "MINIO_CONSISTENCY_CHECK_ON_START": True,
-}
-
-STORAGES = {
-    "default": {
-        "BACKEND": "django_minio_backend.models.MinioBackend",
-        "OPTIONS": {
-            **MINIO_COMMON_OPTIONS,
-
-            "MINIO_DEFAULT_BUCKET": os.getenv("MINIO_BUCKET_NAME", "docs"), 
-            "MINIO_PRIVATE_BUCKETS": ["django-backend-dev-private"],
-            "MINIO_PUBLIC_BUCKETS": [os.getenv("MINIO_BUCKET_NAME", "docs")],
-        },
-    },
-    "staticfiles": {
-        "BACKEND": "django_minio_backend.models.MinioBackendStatic",
-        "OPTIONS": {
-            **MINIO_COMMON_OPTIONS,
-            "MINIO_STATIC_FILES_BUCKET": "static",
-        },
-    },
-}
+AWS_ACCESS_KEY_ID = MINIO_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
+AWS_STORAGE_BUCKET_NAME = MINIO_BUCKET
+AWS_S3_ENDPOINT_URL = MINIO_ENDPOINT
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = True
+AWS_S3_FILE_OVERWRITE = True
 
 # URLs for media and static
 MEDIA_URL = f'{MINIO_ENDPOINT}/{MINIO_BUCKET}/'

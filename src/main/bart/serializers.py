@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import BARTModel
+from .models import BARTQuery
 
-class BARTSerializer(serializers.ModelSerializer):
+class BARTQuerySerializer(serializers.ModelSerializer):
     class Meta:
-        model = BARTModel
+        model = BARTQuery
         fields = '__all__'

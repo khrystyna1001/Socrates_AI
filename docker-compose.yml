@@ -56,6 +56,17 @@ services:
     depends_on:
       - rabbitmq
 
+  flower:
+    build: 
+      context: ./src
+      args: 
+        HF_TOKEN: ${HF_TOKEN}
+    command: uv run celery -A backend flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - rabbitmq
+
   db:
     image: ankane/pgvector
     volumes:
@@ -73,10 +84,10 @@ services:
     image: minio/minio
     hostname: "minio"
     volumes:
-      - minio:/minio_files
+      - minio_files:/data
     env_file:
       - .env
-    command: 'minio server /minio_files --console-address ":9001"'
+    command: 'minio server /data --console-address ":9001"'
     ports:
       - 9000:9000
       - 9001:9001
