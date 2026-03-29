@@ -83,12 +83,20 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import axios from "axios";
 import Header from "@/components/Header.vue";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api",
+  baseURL: import.meta.env.VITE_DOC_API_BASE_URL || "/doc_api",
+  withCredentials: true,
 });
+
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  return parts.length === 2 ? parts.pop().split(";").shift() : "";
+};
 
 const title = ref("");
 const file = ref(null);
@@ -96,13 +104,7 @@ const isSubmitting = ref(false);
 const successMessage = ref("");
 const errorMessage = ref("");
 const documents = ref([]);
-
-const statusClass = (status) => {
-  if (status === "ready") return "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30";
-  if (status === "processing") return "bg-amber-500/20 text-amber-200 border border-amber-500/30";
-  if (status === "failed") return "bg-rose-500/20 text-rose-200 border border-rose-500/30";
-  return "bg-slate-500/20 text-slate-200 border border-slate-500/30";
-};
+const router = useRouter();
 
 const onFileChange = (event) => {
   const selected = event.target.files?.[0] || null;
@@ -114,7 +116,15 @@ const loadDocuments = async () => {
     const { data } = await api.get("/docs/");
     documents.value = Array.isArray(data) ? data : [];
   } catch (error) {
-    errorMessage.value = "Could not load documents.";
+    const status = error?.response?.status;
+    if (status === 401 || status === 403) {
+      errorMessage.value = "Please log in to view your documents.";
+      router.push("/login");
+      return;
+    }
+
+    const apiData = error?.response?.data;
+    errorMessage.value = apiData?.detail || "Could not load documents.";
   }
 };
 
@@ -129,7 +139,10 @@ const uploadDocument = async () => {
     formData.append("file", file.value);
 
     await api.post("/docs/", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
     });
 
     successMessage.value = "Upload successful. Processing started.";
@@ -137,11 +150,20 @@ const uploadDocument = async () => {
     file.value = null;
     await loadDocuments();
   } catch (error) {
+    const status = error?.response?.status;
+    if (status === 401 || status === 403) {
+      errorMessage.value = "Your session expired. Please log in again.";
+      router.push("/login");
+      return;
+    }
+
     const apiData = error?.response?.data;
     if (apiData?.title?.[0]) {
       errorMessage.value = apiData.title[0];
     } else if (apiData?.file?.[0]) {
       errorMessage.value = apiData.file[0];
+    } else if (apiData?.detail) {
+      errorMessage.value = apiData.detail;
     } else {
       errorMessage.value = "Upload failed. Please try again.";
     }

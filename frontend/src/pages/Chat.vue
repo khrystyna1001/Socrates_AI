@@ -75,13 +75,26 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import axios from "axios";
 import Header from "@/components/Header.vue";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api",
+const docsApi = axios.create({
+  baseURL: import.meta.env.VITE_DOC_API_BASE_URL || "/doc_api",
+  withCredentials: true,
 });
+
+const bartApi = axios.create({
+  baseURL: import.meta.env.VITE_BART_API_BASE_URL || "/bart_api",
+  withCredentials: true,
+});
+
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  return parts.length === 2 ? parts.pop().split(";").shift() : "";
+};
 
 const documents = ref([]);
 const selectedDocumentId = ref("");
@@ -89,12 +102,19 @@ const prompt = ref("");
 const isSubmitting = ref(false);
 const errorMessage = ref("");
 const latestResponse = ref(null);
+const router = useRouter();
 
 const loadDocuments = async () => {
   try {
-    const { data } = await api.get("/docs/");
+    const { data } = await docsApi.get("/docs/");
     documents.value = Array.isArray(data) ? data : [];
   } catch (error) {
+    const status = error?.response?.status;
+    if (status === 401 || status === 403) {
+      errorMessage.value = "Please log in to access your documents.";
+      router.push("/login");
+      return;
+    }
     errorMessage.value = "Could not load documents. Check backend connection.";
   }
 };
@@ -108,9 +128,19 @@ const submitPrompt = async () => {
       document: selectedDocumentId.value,
       prompt: prompt.value.trim(),
     };
-    const { data } = await api.post("/bart/", payload);
+    const { data } = await bartApi.post("/bart/", payload, {
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+    });
     latestResponse.value = data;
   } catch (error) {
+    const status = error?.response?.status;
+    if (status === 401) {
+      errorMessage.value = "Your session expired. Please log in again.";
+      router.push("/login");
+      return;
+    }
     const apiMessage = error?.response?.data?.detail;
     errorMessage.value = apiMessage || "Failed to generate response.";
   } finally {

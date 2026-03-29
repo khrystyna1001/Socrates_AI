@@ -18,11 +18,12 @@
                     </button>
                     <div
                     v-if="openUserMenu"
+                    v-for="item in userMenuItems" :key="item.id"
                     class="absolute right-0 top-12 w-48 rounded-lg border border-slate-700 bg-slate-800 shadow-lg z-50"
                     >
-                    <button class="block w-full px-4 py-2 text-left text-white hover:bg-slate-700">Profile</button>
-                    <button class="block w-full px-4 py-2 text-left text-white hover:bg-slate-700">Settings</button>
-                    <button class="block w-full px-4 py-2 text-left text-white hover:bg-slate-700">Logout</button>
+                    <button class="block w-full px-4 py-2 text-left text-white hover:bg-slate-700">
+                        <RouterLink :to="item.path" class="hover:text-indigo-300 transition-colors">{{  item.name  }}</RouterLink>
+                    </button>
                     </div>
                 </aside>
             </div>
@@ -58,6 +59,11 @@ const navItems=[
     {id: 3, name: 'Chat with Socrates', path: '/chat' },
     {id: 4, name: 'About', path: '/about' },
     {id: 5, name: 'How to Use', path: '/guide' },
+]
+
+const userMenuItems = [
+    {id: 1, name: 'My Profile', path: '/profile' },
+    {id: 2, name: 'Log out', path: '/logout' },
 ]
 
 onClickOutside(menuRef, () => {

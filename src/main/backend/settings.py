@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'storages',
     'pgvector',
     'django_celery_results',
+    'private_storage',
     
     # Local
     'bart',
@@ -53,10 +54,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:9000",
     "http://127.0.0.1:9000",
     "http://0.0.0.0:9000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://0.0.0.0:8000",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = (
     "DELETE",
@@ -75,6 +75,13 @@ CORS_ALLOW_HEADERS = (
     "x-csrftoken",
     "x-requested-with",
 )
+
+# --- CSRF (For Vue) ---
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173', 
+    'http://0.0.0.0:5173', 
+    'http://127.0.0.1:5173'
+    ]
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -112,16 +119,27 @@ MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://minio:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ROOT_USER")
 MINIO_SECRET_KEY = os.getenv("MINIO_ROOT_PASSWORD")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET_NAME", "docs")
+MINIO_USER_BUCKET_PREFIX = os.getenv("MINIO_USER_BUCKET_PREFIX", "user-files")
 
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 AWS_ACCESS_KEY_ID = MINIO_ACCESS_KEY
 AWS_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
 AWS_STORAGE_BUCKET_NAME = MINIO_BUCKET
-AWS_S3_ENDPOINT_URL = MINIO_ENDPOINT
+AWS_S3_ENDPOINT_URL = S3_ENDPOINT
 AWS_DEFAULT_ACL = None
 AWS_QUERYSTRING_AUTH = True
 AWS_S3_FILE_OVERWRITE = True
+
+# --- Private Storage (S3-compatible MinIO, no django-minio-storage required) ---
+PRIVATE_STORAGE_CLASS = 'private_storage.storage.s3boto3.PrivateS3BotoStorage'
+AWS_PRIVATE_STORAGE_BUCKET_NAME = MINIO_BUCKET
+AWS_PRIVATE_S3_ENDPOINT_URL = S3_ENDPOINT
+AWS_PRIVATE_S3_ACCESS_KEY_ID = MINIO_ACCESS_KEY
+AWS_PRIVATE_S3_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
+AWS_PRIVATE_S3_ADDRESSING_STYLE = "path"
+AWS_PRIVATE_QUERYSTRING_AUTH = True
+AWS_PRIVATE_AUTO_CREATE_BUCKET = True
 
 # URLs for media and static
 MEDIA_URL = f'{MINIO_ENDPOINT}/{MINIO_BUCKET}/'
@@ -133,10 +151,5 @@ CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TIMEZONE = "Australia/Tasmania"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
-
-CELERY_TASK_ROUTES = {
-    'bart.tasks.manager_find_missing_book': {'queue': 'manager_queue'},
-    'bart.tasks.install_single_book': {'queue': 'installer_queue'},
-}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

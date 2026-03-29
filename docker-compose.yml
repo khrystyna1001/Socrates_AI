@@ -13,6 +13,10 @@ services:
       - 8000:8000
     env_file:
       - .env
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
     develop:
       watch:
         - action: sync+restart
@@ -40,9 +44,12 @@ services:
     command: uv run celery -A backend worker -l info
     volumes:
       - ./src/:/app
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       - db
       - rabbitmq
+      - ollama
 
   celery-beat:
     build: 
@@ -53,19 +60,33 @@ services:
     command: uv run celery -A backend beat -l info
     volumes:
       - ./src/:/app
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       - rabbitmq
+      - ollama
 
   flower:
     build: 
       context: ./src
       args: 
         HF_TOKEN: ${HF_TOKEN}
+    working_dir: /app/main
     command: uv run celery -A backend flower --port=5555
     ports:
       - "5555:5555"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       - rabbitmq
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
 
   db:
     image: ankane/pgvector
@@ -109,3 +130,4 @@ services:
 volumes:
   postgres_data:
   minio_files:
+  ollama_data:

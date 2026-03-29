@@ -1,10 +1,20 @@
 from django.db import models
+from django.conf import settings
 from pgvector.django import HnswIndex, VectorField
+from private_storage.fields import PrivateFileField
 
 
 class Document(models.Model):
     title = models.CharField(max_length=255, unique=True, db_index=True)
-    file = models.FileField(upload_to="docs/")
+    file = PrivateFileField("File", upload_to="docs/")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="documents",
+        null=True,
+        blank=True,
+    )
+    minio_bucket = models.CharField(max_length=63, default="docs")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

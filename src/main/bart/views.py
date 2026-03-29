@@ -4,16 +4,36 @@ from rest_framework.response import Response
 
 from .models import BARTQuery
 from .serializers import BARTQuerySerializer
-from .tasks import generate_bart_response_task
+from .tasks import embed_user_prompt, read_user_prompt, invoke_bart_response
 
 
 class BARTViewSet(viewsets.ModelViewSet):
     queryset = BARTQuery.objects.select_related("document").all().order_by("-id")
     serializer_class = BARTQuerySerializer
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         instance = serializer.save(response="")
-        generate_bart_response_task.delay(instance.id)
+
+        try:
+            q_vec = embed_user_prompt(instance)
+            context = read_user_prompt(instance, q_vec)
+            invoke_bart_response(instance, context)
+        except Exception as exc:
+            return Response(
+                {
+                    "detail": "LLM service unavailable. Ensure Ollama is running and the model is pulled.",
+                    "error": str(exc),
+                    "query_id": instance.id,
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        instance.refresh_from_db()
+
+        output_serializer = self.get_serializer(instance)
+        headers = self.get_success_headers(output_serializer.data)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=True, methods=["get"])
     def result(self, request, pk=None):
