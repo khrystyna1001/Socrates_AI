@@ -44,12 +44,9 @@ services:
     command: uv run celery -A backend worker -l info
     volumes:
       - ./src/:/app
-    environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       - db
       - rabbitmq
-      - ollama
 
   celery-beat:
     build: 
@@ -60,11 +57,8 @@ services:
     command: uv run celery -A backend beat -l info
     volumes:
       - ./src/:/app
-    environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       - rabbitmq
-      - ollama
 
   flower:
     build: 
@@ -75,18 +69,8 @@ services:
     command: uv run celery -A backend flower --port=5555
     ports:
       - "5555:5555"
-    environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       - rabbitmq
-      - ollama
-
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
 
   db:
     image: ankane/pgvector
