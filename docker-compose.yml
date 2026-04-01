@@ -14,9 +14,7 @@ services:
     env_file:
       - .env
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
-    depends_on:
-      - ollama
+      - OLLAMA_BASE_URL=http://localhost:11434
     develop:
       watch:
         - action: sync+restart
@@ -42,6 +40,8 @@ services:
         HF_TOKEN: ${HF_TOKEN}
     working_dir: /app/main
     command: uv run celery -A backend worker -l info
+    environment:
+      - OLLAMA_BASE_URL=http://localhost:11434
     volumes:
       - ./src/:/app
     depends_on:
@@ -55,6 +55,8 @@ services:
         HF_TOKEN: ${HF_TOKEN}
     working_dir: /app/main
     command: uv run celery -A backend beat -l info
+    environment:
+      - OLLAMA_BASE_URL=http://localhost:11434
     volumes:
       - ./src/:/app
     depends_on:
@@ -67,6 +69,8 @@ services:
         HF_TOKEN: ${HF_TOKEN}
     working_dir: /app/main
     command: uv run celery -A backend flower --port=5555
+    environment:
+      - OLLAMA_BASE_URL=http://localhost:11434
     ports:
       - "5555:5555"
     depends_on:
@@ -114,4 +118,3 @@ services:
 volumes:
   postgres_data:
   minio_files:
-  ollama_data:

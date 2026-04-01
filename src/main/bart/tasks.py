@@ -27,8 +27,8 @@ def get_llm():
     global _llm
     if _llm is None:
         _llm = OllamaLLM(
-            model="deepseek-r1:latest",
-            base_url=os.getenv("OLLAMA_BASE_URL", "http://ollama:11434"),
+            model="tinyllama:latest",
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         )
     return _llm
 
