@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'storages',
     'pgvector',
     'django_celery_results',
-    'private_storage',
     
     # Local
     'bart',
@@ -121,29 +120,23 @@ MINIO_SECRET_KEY = os.getenv("MINIO_ROOT_PASSWORD")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET_NAME", "docs")
 MINIO_USER_BUCKET_PREFIX = os.getenv("MINIO_USER_BUCKET_PREFIX", "user-files")
 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+DEFAULT_FILE_STORAGE = "documents.storage.MinioStorage"
+PRIVATE_STORAGE_CLASS = "documents.storage.MinioStorage"
 
-AWS_ACCESS_KEY_ID = MINIO_ACCESS_KEY
-AWS_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
-AWS_STORAGE_BUCKET_NAME = MINIO_BUCKET
-AWS_S3_ENDPOINT_URL = S3_ENDPOINT
-AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = True
-AWS_S3_FILE_OVERWRITE = True
+# MEDIA_URL = f'{MINIO_ENDPOINT}/{MINIO_BUCKET}/media/'
+STATIC_URL = "/static/"
 
-# --- Private Storage (S3-compatible MinIO, no django-minio-storage required) ---
-PRIVATE_STORAGE_CLASS = 'private_storage.storage.s3boto3.PrivateS3BotoStorage'
-AWS_PRIVATE_STORAGE_BUCKET_NAME = MINIO_BUCKET
-AWS_PRIVATE_S3_ENDPOINT_URL = S3_ENDPOINT
-AWS_PRIVATE_S3_ACCESS_KEY_ID = MINIO_ACCESS_KEY
-AWS_PRIVATE_S3_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
-AWS_PRIVATE_S3_ADDRESSING_STYLE = "path"
-AWS_PRIVATE_QUERYSTRING_AUTH = True
-AWS_PRIVATE_AUTO_CREATE_BUCKET = True
-
-# URLs for media and static
-MEDIA_URL = f'{MINIO_ENDPOINT}/{MINIO_BUCKET}/'
-STATIC_URL = '/static/'
+STORAGES = {
+    "default": {
+        "BACKEND": "documents.storage.MinioStorage",
+    },
+    "private": {
+        "BACKEND": "documents.storage.MinioStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # --- CELERY ---
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')

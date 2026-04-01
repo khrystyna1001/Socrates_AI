@@ -17,39 +17,6 @@ def set_csrf_token(request):
     We set the CSRF cookie on the frontend.
     """
     return JsonResponse({'message': 'CSRF cookie set'})
-
-@require_http_methods(['POST'])
-def login_view(request):
-    try:
-        data = json.loads(request.body.decode('utf-8'))
-        email = data['email'].strip().lower()
-        password = data['password']
-    except (json.JSONDecodeError, KeyError, AttributeError):
-        return JsonResponse(
-            {'success': False, 'message': 'Invalid JSON'}, status=400
-        )
-
-    user = authenticate(request, username=email, password=password)
-
-    if not user:
-        try:
-            existing_user = User.objects.get(email__iexact=email)
-            user = authenticate(
-                request, username=existing_user.username, password=password
-            )
-        except User.DoesNotExist:
-            user = None
-
-    if user:
-        login(request, user)
-        return JsonResponse({'success': True, 'message': 'Logged in successfully'})
-    return JsonResponse(
-        {'success': False, 'message': 'Invalid credentials'}, status=401
-    )
-
-def logout_view(request):
-    logout(request)
-    return JsonResponse({'message': 'Logged out'})
  
 @require_http_methods(['GET'])
 def user(request):

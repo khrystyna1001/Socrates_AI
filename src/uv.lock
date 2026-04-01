@@ -576,15 +576,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-private-storage"
-version = "3.1.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/46/82/d4ce6aa4a7e8d9699cef5e04b0d180f60aeaea71a48720c3bc7c43ea417c/django_private_storage-3.1.3.tar.gz", hash = "sha256:b3d1f4660ddac54ce5576473b093f50e7c04f0d065cb64e9bba2d201885792e6", size = 25488, upload-time = "2025-10-05T11:13:35.655Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2b/44/51d3e9b4bd9375b2690422063dff7b8ecf8cc3ab773828519830e8f2da47/django_private_storage-3.1.3-py3-none-any.whl", hash = "sha256:bac47df9a18be1b0c3c1af4ae903dba1360482ce05579a4f65cdd38adb44fedc", size = 34520, upload-time = "2025-10-05T11:13:34.101Z" },
-]
-
-[[package]]
 name = "django-storages"
 version = "1.14.6"
 source = { registry = "https://pypi.org/simple" }
@@ -2541,7 +2532,6 @@ dependencies = [
     { name = "django-cors-headers" },
     { name = "django-minio-backend" },
     { name = "django-minio-storage" },
-    { name = "django-private-storage" },
     { name = "django-storages" },
     { name = "djangorestframework" },
     { name = "flower" },
@@ -2567,7 +2557,6 @@ requires-dist = [
     { name = "django-cors-headers", specifier = ">=4.9.0" },
     { name = "django-minio-backend", specifier = ">=4.5.0" },
     { name = "django-minio-storage" },
-    { name = "django-private-storage", specifier = ">=3.1.3" },
     { name = "django-storages", specifier = ">=1.14.6" },
     { name = "djangorestframework", specifier = ">=3.17.0" },
     { name = "flower", specifier = ">=2.0.1" },

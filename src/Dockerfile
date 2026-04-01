@@ -29,8 +29,8 @@ RUN --mount=type=cache,target=/root/.cache \
 RUN uvx --from huggingface_hub hf auth login && \
     uvx --from huggingface_hub hf download sentence-transformers/all-mpnet-base-v2
 
-RUN curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.5.7 sh && \
-    ollama serve && \
-    ollama pull tinyllama:latest
+RUN curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.5.7 sh
+    # ollama serve && \
+    # ollama pull tinyllama
 
 COPY . .

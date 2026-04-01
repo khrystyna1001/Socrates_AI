@@ -1,12 +1,11 @@
 from django.db import models
 from django.conf import settings
 from pgvector.django import HnswIndex, VectorField
-from private_storage.fields import PrivateFileField
 
 
 class Document(models.Model):
     title = models.CharField(max_length=255, unique=True, db_index=True)
-    file = PrivateFileField("File", upload_to="docs/")
+    file = models.FileField("File", upload_to="docs")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -21,9 +20,15 @@ class Document(models.Model):
     class Meta:
         ordering = ["-id"]
 
+
     def __str__(self):
         return self.title
 
+class DocumentText(models.Model):
+    pass
+
+class DocumentTextChunk(models.Model):
+    pass
 
 class DocumentChunk(models.Model):
     document = models.ForeignKey(
@@ -55,3 +60,6 @@ class DocumentChunk(models.Model):
 
     def __str__(self):
         return f"Document {self.document_id} chunk {self.chunk_index}"
+
+class DocumentPages(models.Model):
+    pass

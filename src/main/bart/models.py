@@ -1,6 +1,11 @@
 from django.db import models
 from documents.models import Document
 
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama.llms import OllamaLLM
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+import os
 
 class BARTQuery(models.Model):
     document = models.ForeignKey(
@@ -21,3 +26,26 @@ class BARTQuery(models.Model):
     def set_response(self, text: str):
         self.response = text
         self.save(update_fields=["response"])
+
+class EmbeddingModel(models.Model):
+    embedding_model = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-mpnet-base-v2"
+        )
+    
+    def get_embedding_model(self):
+        return self.embedding_model
+
+class LLMModel(models.Model):
+    llm = OllamaLLM(
+            model="tinyllama:latest",
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+        )
+    
+    def get_llm(self):
+        return self.llm
+    
+class TextSplitter(models.Model):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+
+    def get_text_splitter(self):
+        return self.text_splitter

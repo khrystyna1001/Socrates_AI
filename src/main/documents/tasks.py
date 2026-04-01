@@ -2,34 +2,24 @@ from django.conf import settings
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.db import transaction
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
+from django.shortcuts import get_object_or_404
+
 
 from .models import Document, DocumentChunk
 from .minio_utils import file_exists, get_file_stream
+from bart.models import EmbeddingModel, LLMModel, TextSplitter
 
 logger = get_task_logger(__name__)
-_embedding_model = None
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-
-
-def get_embedding_model():
-    global _embedding_model
-    if _embedding_model is None:
-        _embedding_model = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-mpnet-base-v2"
-        )
-    return _embedding_model
 
 def _get_doc_or_error(doc_id):
     try:
-        return Document.objects.get(pk=doc_id), None
+        return get_object_or_404(Document, pk=doc_id)
     except Document.DoesNotExist:
         return None, {"status": "error", "doc_id": doc_id, "message": "Document not found"}
 
 
-@shared_task(bind=True)
+@shared_task()
 def upload_pdf_document(doc_id):
     doc, error = _get_doc_or_error(doc_id)
     if error:
@@ -37,7 +27,7 @@ def upload_pdf_document(doc_id):
     return {"status": "ok", "doc_id": doc.id}
 
 
-@shared_task(bind=True)
+@shared_task()
 def extract_pdf_text(payload):
     doc_id = payload["doc_id"]
     doc, error = _get_doc_or_error(doc_id)
@@ -54,22 +44,22 @@ def extract_pdf_text(payload):
     return {"status": "ok", "doc_id": doc_id, "text": text}
 
 
-@shared_task(bind=True)
+@shared_task()
 def split_pdf_into_chunks(payload):
     text = payload.get("text", "")
-    chunks = text_splitter.split_text(text) if text else []
+    chunks = TextSplitter().text_splitter.split_text(text) if text else []
     return {"status": "ok", "doc_id": payload["doc_id"], "chunks": chunks}
 
 
-@shared_task(bind=True)
+@shared_task()
 def embed_chunks(payload):
     chunks = payload.get("chunks", [])
-    embedding_model = get_embedding_model()
+    embedding_model = EmbeddingModel().get_embedding_model()
     vectors = embedding_model.embed_documents(chunks) if chunks else []
     return {"status": "ok", "doc_id": payload["doc_id"], "chunks": chunks, "vectors": vectors}
 
 
-@shared_task(bind=True)
+@shared_task()
 def save_to_postgres(payload):
     doc_id = payload["doc_id"]
     doc, error = _get_doc_or_error(doc_id)
