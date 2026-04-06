@@ -18,6 +18,23 @@ def set_csrf_token(request):
     """
     return JsonResponse({'message': 'CSRF cookie set'})
  
+@require_http_methods(["POST"])
+def login_view(request):
+    data = json.loads(request.body.decode("utf-8"))
+    username = data.get("email")
+    password = data.get("password")
+
+    user = authenticate(request, username=username, password=password)
+    if user is None:
+        return JsonResponse({"message": "Invalid credentials"}, status=400)
+
+    login(request, user)
+    return JsonResponse({"message": "Logged in successfully"})
+
+def logout_view(request):
+    logout(request)
+    return JsonResponse({'message': 'Logged out'})
+
 @require_http_methods(['GET'])
 def user(request):
     if request.user.is_authenticated:
