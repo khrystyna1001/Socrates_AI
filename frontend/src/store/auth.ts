@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', {
       })
     },
 
-    async login(email: string, password: string, router: { push: (path: string) => Promise<void> } | null = null) {
+    async login(username: string, password: string, router: { push: (path: string) => Promise<void> } | null = null) {
       try {
         await this.setCsrfToken()
 
@@ -68,7 +68,7 @@ export const useAuthStore = defineStore('auth', {
             'X-CSRFToken': getCookie('csrftoken'),
           },
           body: JSON.stringify({
-            email,
+            username,
             password,
           }),
           credentials: 'include',
@@ -76,15 +76,17 @@ export const useAuthStore = defineStore('auth', {
 
         const data = await response.json().catch(() => ({}))
 
-        if (response.ok && data.success) {
+        if (response.ok) {
+          const maybeUser = typeof data === 'object' && data !== null && 'user' in data ? data.user : null
           this.isAuthenticated = true
+          this.user = maybeUser
           this.saveState()
           if (router) {
             await router.push('/')
           }
           return {
             success: true,
-            message: 'Logged in successfully.',
+            message: typeof data.message === 'string' ? data.message : 'Logged in successfully.',
           }
         }
 

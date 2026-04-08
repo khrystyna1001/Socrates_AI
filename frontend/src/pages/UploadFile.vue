@@ -89,6 +89,7 @@ import Header from "@/components/Header.vue";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_DOC_API_BASE_URL || "/doc_api",
+  headers: {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2OTQ1MTkxLCJpYXQiOjE3NzU2NDkxOTEsImp0aSI6IjViZWFlNGQyMTU2NDQ1NWY4NTcxNGI0NmQyZTRlYTk0IiwidXNlcl9pZCI6IjIifQ.QRDsAKMyeHtjFXkIQWRrGCqWu-57JqfHz73NFL2GFAA'},
   withCredentials: true,
 });
 

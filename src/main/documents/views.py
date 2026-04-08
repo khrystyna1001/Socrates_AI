@@ -5,8 +5,7 @@ from celery import chain
 
 from .models import Document
 from .serializers import DocumentSerializer
-from .tasks import upload_pdf_document, extract_pdf_text, split_pdf_into_chunks, embed_chunks, save_to_postgres, save_to_minio
-from .minio_utils import build_user_bucket_name, upload_user_file
+from .tasks import upload_pdf_document, extract_pdf_text, split_pdf_into_chunks, embed_chunks, save_to_postgres, save_to_minio, build_user_bucket_name, upload_user_file
 
 
 class DocumentViewSet(viewsets.ModelViewSet):

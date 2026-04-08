@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'storages',
     'pgvector',
     'django_celery_results',
+    'rest_framework_simplejwt',
     
     # Local
     'bart',
@@ -84,6 +85,14 @@ CSRF_TRUSTED_ORIGINS = [
 
 ROOT_URLCONF = 'backend.urls'
 
+# --- DRF ---
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
+# --- TEMPLATES ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -146,3 +155,9 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- Simple JWT ---
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=15),
+}

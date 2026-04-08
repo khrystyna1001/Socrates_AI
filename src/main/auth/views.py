@@ -20,16 +20,30 @@ def set_csrf_token(request):
  
 @require_http_methods(["POST"])
 def login_view(request):
-    data = json.loads(request.body.decode("utf-8"))
-    username = data.get("email")
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "message": "Invalid request body."}, status=400)
+
+    username = data.get("username")
     password = data.get("password")
 
+    if not username or not password:
+        return JsonResponse({"success": False, "message": "Username and password are required."}, status=400)
+
     user = authenticate(request, username=username, password=password)
+    
     if user is None:
-        return JsonResponse({"message": "Invalid credentials"}, status=400)
+        return JsonResponse({"success": False, "message": "Invalid credentials"}, status=400)
 
     login(request, user)
-    return JsonResponse({"message": "Logged in successfully"})
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Logged in successfully",
+            "user": {"username": user.username, "email": user.email},
+        }
+    )
 
 def logout_view(request):
     logout(request)
