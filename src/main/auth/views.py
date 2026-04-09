@@ -9,41 +9,26 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from .forms import CreateUserForm
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 # Create your views here.
 @ensure_csrf_cookie
 @require_http_methods(['GET'])
 def set_csrf_token(request):
-    """
-    We set the CSRF cookie on the frontend.
-    """
     return JsonResponse({'message': 'CSRF cookie set'})
- 
+
 @require_http_methods(["POST"])
 def login_view(request):
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Invalid request body."}, status=400)
-
+    data = json.loads(request.body.decode("utf-8"))
     username = data.get("username")
     password = data.get("password")
 
-    if not username or not password:
-        return JsonResponse({"success": False, "message": "Username and password are required."}, status=400)
-
     user = authenticate(request, username=username, password=password)
-    
     if user is None:
-        return JsonResponse({"success": False, "message": "Invalid credentials"}, status=400)
+        return JsonResponse({"message": "Invalid credentials"}, status=400)
 
     login(request, user)
-    return JsonResponse(
-        {
-            "success": True,
-            "message": "Logged in successfully",
-            "user": {"username": user.username, "email": user.email},
-        }
-    )
+    return JsonResponse({"message": "Logged in successfully"})
 
 def logout_view(request):
     logout(request)
@@ -53,7 +38,7 @@ def logout_view(request):
 def user(request):
     if request.user.is_authenticated:
         return JsonResponse(
-            {'username': request.user.username, 'email': request.user.email}
+            {'username': request.user.username, 'username': request.user.username}
         )
     return JsonResponse(
         {'message': 'Not logged in'}, status=401
@@ -69,3 +54,8 @@ def register(request):
     else:
         errors = form.errors.as_json()
         return JsonResponse({'error': errors}, status=400)
+
+# simpleJWT
+class MyTokenObtainPairView(TokenObtainPairView):
+    def post(self, request):
+        return JsonResponse(request)

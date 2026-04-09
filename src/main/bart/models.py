@@ -7,6 +7,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 import os
 
+# fill verbose_name fields
+
 class BARTQuery(models.Model):
     document = models.ForeignKey(
         Document,
@@ -23,6 +25,7 @@ class BARTQuery(models.Model):
     def __str__(self):
         return f"Query {self.id} for document {self.document_id}"
 
+    # avoid response naming convention
     def set_response(self, text: str):
         self.response = text
         self.save(update_fields=["response"])

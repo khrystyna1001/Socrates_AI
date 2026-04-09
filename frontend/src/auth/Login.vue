@@ -78,6 +78,8 @@ const submitLogIn = async () => {
     return
   }
 
+  const res = await authStore.postToken(username.value, password.value)
+
   successMessage.value = result.message
   setTimeout(() => {
     router.push('/')

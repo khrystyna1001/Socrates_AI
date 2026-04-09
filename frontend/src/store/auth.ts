@@ -108,7 +108,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async register(email: string, password: string) {
+    async register(username: string, password: string) {
       await this.setCsrfToken()
 
       try {
@@ -119,7 +119,7 @@ export const useAuthStore = defineStore('auth', {
             'X-CSRFToken': getCookie('csrftoken'),
           },
           body: JSON.stringify({
-            email,
+            username,
             password,
           }),
           credentials: 'include',
@@ -166,6 +166,73 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Logout failed', error)
         throw error
+      }
+    },
+
+    // TOKEN
+    async postToken(username: string, password: string) {
+      try {
+        await this.setCsrfToken()
+
+        const response = await fetch(`${AUTH_BASE_URL}/token/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+          credentials: 'include',
+        })
+
+        console.log(response)
+        console.log(response.access)
+
+        if (response.ok) {
+          return {
+            success: true,
+            message: 'Token created successfully.',
+          }
+        }
+
+        // access_token = response.
+      } catch (error) {
+        console.error('Failed to create token', error)
+        this.user = null
+        this.isAuthenticated = false
+      }
+    },
+
+    async refreshToken(username: string, password: string) {
+      try {
+        await this.setCsrfToken()
+
+        const response = await fetch(`${AUTH_BASE_URL}/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+          credentials: 'include',
+        })
+
+        if (response.ok) {
+          return {
+            success: true,
+            message: 'Token created successfully.',
+          }
+        }
+
+      } catch (error) {
+        console.error('Failed to create token', error)
+        this.user = null
+        this.isAuthenticated = false
       }
     },
 

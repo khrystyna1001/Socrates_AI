@@ -1,4 +1,6 @@
-version: '3.8'
+# create a small seperate project for handling docker and docker compose
+
+
 services:
   django-backend:
     build: 
@@ -33,6 +35,8 @@ services:
       RABBITMQ_DEFAULT_USER: "guest"
       RABBITMQ_DEFAULT_PASS: "guest"
 
+# create one service for celery, celery beat and flower
+# remove the volume definition from celery
   celery:
     build: 
       context: ./src

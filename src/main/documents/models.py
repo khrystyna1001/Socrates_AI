@@ -3,6 +3,8 @@ from django.conf import settings
 from pgvector.django import HnswIndex, VectorField
 from pypdf import PdfReader
 
+# django lifecycle
+# django logic
 
 class Document(models.Model):
     title = models.CharField(max_length=255, unique=True, db_index=True)
