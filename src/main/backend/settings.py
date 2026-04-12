@@ -28,10 +28,14 @@ INSTALLED_APPS = [
     'pgvector',
     'django_celery_results',
     'rest_framework_simplejwt',
+    'django_lifecycle_checks',
+    'django_logic',
+
     
     # Local
     'bart',
     'documents',
+    'services'
 ]
 
 # --- MIDDLEWARE ---

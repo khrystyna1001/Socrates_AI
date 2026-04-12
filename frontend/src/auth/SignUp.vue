@@ -6,12 +6,12 @@
 
       <form class="space-y-4" @submit.prevent="submitSignUp">
         <div>
-          <label for="email" class="block text-sm text-slate-300 mb-1">Email</label>
+          <label for="username" class="block text-sm text-slate-300 mb-1">Username</label>
           <input
-            id="email"
-            v-model.trim="email"
-            type="email"
-            autocomplete="email"
+            id="username"
+            v-model="username"
+            type="username"
+            autocomplete="username"
             required
             class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 outline-none focus:ring-2 focus:ring-cyan-500"
           />
@@ -72,7 +72,7 @@ import { useAuthStore } from '../store/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const email = ref('')
+const username = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const error = ref('')
@@ -90,7 +90,7 @@ const submitSignUp = async () => {
 
   isLoading.value = true
 
-  const result = await authStore.register(email.value, password.value)
+  const result = await authStore.register(username.value, password.value)
 
   isLoading.value = false
 

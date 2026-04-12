@@ -1,20 +1,38 @@
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from pgvector.django import HnswIndex, VectorField
 from pypdf import PdfReader
 
-# django lifecycle
-# django logic
+from django_logic import Process as BaseProcess, Transition, Action
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
-class Document(models.Model):
+
+# MY_STATE_CHOICES = (
+#      ('draft', 'Draft'),
+#      ('approved', 'Approved'),
+#      ('paid', 'Paid'),
+#      ('void', 'Void'),
+#  )
+
+# def update_data(*args, **kwargs):
+#     return None
+
+# class DocumentLogic(BaseProcess):
+#     states = MY_STATE_CHOICES
+#     transitions = [
+#         Transition(action_name='approve', sources=['draft'], target='approved'),
+#         Transition(action_name='pay', sources=['approve'], target='paid'),
+#         Transition(action_name='void', sources=['draft', 'approved'], target='void'),
+#         Action(action_name='update', side_effects=[update_data]),
+#     ]
+
+class Document(LifecycleModel):
     title = models.CharField(max_length=255, unique=True, db_index=True)
     file = models.FileField("File", upload_to="docs")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="documents",
-        null=True,
-        blank=True,
+        related_name="documents"
     )
     minio_bucket = models.CharField(max_length=63, default="docs")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -23,6 +41,19 @@ class Document(models.Model):
     class Meta:
         ordering = ["-id"]
 
+    @hook(AFTER_CREATE)
+    def initialize_related_models(self):
+        def create_related_models():
+            DocumentPages.objects.get_or_create(document=self)
+            document_text, _ = DocumentText.objects.get_or_create(document=self)
+            DocumentTextChunk.objects.get_or_create(document=document_text)
+            DocumentChunk.objects.get_or_create(
+                document=self,
+                chunk_index=0,
+                defaults={"embedding": None},
+            )
+
+        transaction.on_commit(create_related_models)
 
     def __str__(self):
         return self.title
@@ -32,9 +63,7 @@ class DocumentPages(models.Model):
     document = models.OneToOneField(
         Document,
         on_delete=models.CASCADE,
-        primary_key=False,
-        null=True,
-        blank=True,
+        primary_key=False
     )
     
     def get_pages(self):
@@ -47,9 +76,7 @@ class DocumentText(models.Model):
     document = models.OneToOneField(
         Document,
         on_delete=models.CASCADE,
-        primary_key=False,
-        null=True,
-        blank=True,
+        primary_key=False
     )
     text = models.TextField(default="")
 
@@ -63,9 +90,7 @@ class DocumentTextChunk(models.Model):
     document = models.ForeignKey(
         DocumentText,
         on_delete=models.CASCADE,
-        related_name="text_chunks",
-        null=True,
-        blank=True,
+        related_name="text_chunks"
     )
     chunks = []
 
@@ -77,13 +102,13 @@ class DocumentTextChunk(models.Model):
 
 
 class DocumentChunk(models.Model):
+    
     document = models.ForeignKey(
         Document,
         on_delete=models.CASCADE,
-        related_name="chunks",
-        null=True,
-        blank=True,
+        related_name="chunks"
     )
+
     chunk_index = models.PositiveIntegerField()
     embedding = VectorField(dimensions=768, null=True, blank=True)
 

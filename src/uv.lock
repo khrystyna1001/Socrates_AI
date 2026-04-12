@@ -549,6 +549,27 @@ wheels = [
 ]
 
 [[package]]
+name = "django-lifecycle"
+version = "1.2.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/64/0b/88efc0596e9fc0d025b3b0b3718de27a17881dec05ef00b12f69298a4839/django_lifecycle-1.2.7.tar.gz", hash = "sha256:9d1823d8701d6243ad1d744aa6ad662321c0765880b52f9777c21205fb995ff7", size = 12767, upload-time = "2026-03-02T16:24:28.746Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/38/9b/a45c1cda4f2a162dfe58fe5cad2cdd7e916155543d63abec6085837b0bc9/django_lifecycle-1.2.7-py3-none-any.whl", hash = "sha256:a28eae117b230f22bb550c4fdfefdbae3c7315b4a64bfdcae9cd3f2828a1cf08", size = 15696, upload-time = "2026-03-02T16:24:26.827Z" },
+]
+
+[[package]]
+name = "django-logic"
+version = "0.1.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d2/13/40a58edaf86d1be9f44d1d5ff03db9af1a3d86d07c293cad363ffea780ab/django_logic-0.1.6.tar.gz", hash = "sha256:fa7585cb0defe0b01fd60a0c7a1c81a8134d982700493d4b13e6762bf243f9b0", size = 18898, upload-time = "2025-07-11T05:00:35.49Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b4/1b/e52e5633edffbfbced7e48a74f24f589b40aae01f274f2e88ea7ee9da708/django_logic-0.1.6-py3-none-any.whl", hash = "sha256:79cb11e04d282916c8ead3a7b639404ce53b82c8a2f3665a74926edb253c800b", size = 13833, upload-time = "2025-07-11T05:00:34.03Z" },
+]
+
+[[package]]
 name = "django-minio-backend"
 version = "4.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2553,6 +2574,8 @@ dependencies = [
     { name = "django" },
     { name = "django-celery-results" },
     { name = "django-cors-headers" },
+    { name = "django-lifecycle" },
+    { name = "django-logic" },
     { name = "django-minio-backend" },
     { name = "django-minio-storage" },
     { name = "django-storages" },
@@ -2579,6 +2602,8 @@ requires-dist = [
     { name = "django", specifier = ">=6.0.3" },
     { name = "django-celery-results", specifier = ">=2.6.0" },
     { name = "django-cors-headers", specifier = ">=4.9.0" },
+    { name = "django-lifecycle", specifier = ">=1.2.7" },
+    { name = "django-logic", specifier = ">=0.1.6" },
     { name = "django-minio-backend", specifier = ">=4.5.0" },
     { name = "django-minio-storage" },
     { name = "django-storages", specifier = ">=1.14.6" },

@@ -196,8 +196,6 @@ export const useAuthStore = defineStore('auth', {
             message: 'Token created successfully.',
           }
         }
-
-        // access_token = response.
       } catch (error) {
         console.error('Failed to create token', error)
         this.user = null

@@ -7,7 +7,9 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 
-from .models import Document, DocumentPages, DocumentText, DocumentTextChunk
+from services.models import MinioStorage, PGVectorDB
+
+from .models import Document, DocumentPages, DocumentText, DocumentTextChunk, DocumentChunk
 from bart.models import EmbeddingModel, TextSplitter
 
 logger = get_task_logger(__name__)
@@ -29,11 +31,12 @@ def upload_pdf_document(doc_id):
 @shared_task()
 def extract_pdf_text(payload):
     try:
+        minio = MinioStorage()
         doc_id = payload["doc_id"]
         doc = _get_doc_or_error(doc_id)
 
         bucket_name = doc.minio_bucket or settings.MINIO_BUCKET
-        stream = get_file_stream(bucket_name, doc.file.name)
+        stream = minio.get_file_stream(bucket_name, doc.file.name)
 
         pages = DocumentPages(stream).get_pages()
         text = DocumentText(stream).get_raw_text(pages)
@@ -73,3 +76,13 @@ def embed_chunks(payload):
         return vectors
     except Exception as err:
         logging.warning(err)
+
+@shared_task()
+def save_to_pgvector(payload):
+    pgvector = PGVectorDB()
+    embeddings = payload.get("vectors", [])
+    pgvector.save(embeddings)
+
+@shared_task()
+def save_to_minio(payload):
+    print("fix minio")
