@@ -3,30 +3,30 @@ import re
 from uuid import uuid4
 
 from django.conf import settings
-from django.db import migrations, models
-from django.shortcuts import get_object_or_404
-from pgvector.django import VectorExtension
-from storages.backends.s3 import S3File
-
-from documents.models import Document, DocumentChunk
-from documents.storage import MinioStorage as BaseMinioStorage
-
-
-class Migration(migrations.Migration):
-    operations = [
-        VectorExtension(),
-    ]
+from django.db import models
+from storages.backends.s3boto3 import S3Boto3Storage
 
 
 class PGVectorDB(models.Model):
     def save(self, embeddings):
         try:
+            from documents.models import DocumentChunk
+
             DocumentChunk.save(embeddings)
         except Exception as err:
             logging.warning(err)
 
 
-class MinioStorage(BaseMinioStorage):
+class MinioStorage(S3Boto3Storage):
+    access_key = settings.MINIO_ACCESS_KEY
+    secret_key = settings.MINIO_SECRET_KEY
+    bucket_name = settings.MINIO_BUCKET
+    endpoint_url = settings.S3_ENDPOINT or settings.MINIO_ENDPOINT
+    default_acl = None
+    querystring_auth = True
+    file_overwrite = True
+    custom_domain = False
+    addressing_style = "path"
     location = "docs"
     BUCKET_RE = re.compile(r"[^a-z0-9-]")
 
@@ -58,6 +58,7 @@ class MinioStorage(BaseMinioStorage):
 
         safe_name = uploaded_file.name.replace("/", "_")
         object_key = f"{uuid4().hex}_{safe_name}"
+
         storage = self.get_storage(bucket_name)
         uploaded_file.seek(0)
         storage.save(object_key, uploaded_file)
@@ -72,26 +73,10 @@ class MinioStorage(BaseMinioStorage):
         return storage.exists(object_key)
 
     def document_exists(self, payload) -> bool:
+        from documents.models import Document
+
         doc_id = payload["doc_id"]
-        doc = get_object_or_404(Document, pk=doc_id)
+        doc = Document.objects.get(pk=doc_id)
 
-        bucket_name = doc.minio_bucket or settings.MINIO_BUCKET
+        bucket_name = doc.minio_bucket
         return self.file_exists(bucket_name, doc.file.name)
-
-
-def get_s3_file_path(docs: "Docs", filename: str):
-    return f"{uuid4().hex}.{filename.split('.')[-1]}"
-
-
-class MinioStorageFile(models.Model):
-    file = models.FileField(
-        storage=MinioStorage(),
-        upload_to=get_s3_file_path,
-    )
-
-    def __str__(self):
-        return str(self.id)
-
-    def open(self) -> S3File:
-        storage = MinioStorage()
-        return storage.open(self.file.name, mode="rb")

@@ -133,18 +133,18 @@ MINIO_SECRET_KEY = os.getenv("MINIO_ROOT_PASSWORD")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET_NAME", "docs")
 MINIO_USER_BUCKET_PREFIX = os.getenv("MINIO_USER_BUCKET_PREFIX", "user-files")
 
-DEFAULT_FILE_STORAGE = "documents.storage.MinioStorage"
-PRIVATE_STORAGE_CLASS = "documents.storage.MinioStorage"
+DEFAULT_FILE_STORAGE = "services.models.MinioStorage"
+PRIVATE_STORAGE_CLASS = "services.models.MinioStorage"
 
 # MEDIA_URL = f'{MINIO_ENDPOINT}/{MINIO_BUCKET}/media/'
 STATIC_URL = "/static/"
 
 STORAGES = {
     "default": {
-        "BACKEND": "documents.storage.MinioStorage",
+        "BACKEND": "services.models.MinioStorage",
     },
     "private": {
-        "BACKEND": "documents.storage.MinioStorage",
+        "BACKEND": "services.models.MinioStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",

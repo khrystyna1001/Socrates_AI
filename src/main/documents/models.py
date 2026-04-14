@@ -3,31 +3,48 @@ from django.conf import settings
 from pgvector.django import HnswIndex, VectorField
 from pypdf import PdfReader
 
-from django_logic import Process as BaseProcess, Transition, Action
+from django_logic import Process as BaseProcess, ProcessManager, Transition, Action
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from documents.tasks import store_document_in_minio
 
+MY_STATE_CHOICES = (
+    ("get_document", "Get Document"),
+    ("upload_document", "Upload Document"),
+    ("extract_pdf_text", "Extract PDF Text"),
+    ("split_pdf_into_chunks", "Split PDF Into Chunks"),
+    ("split_text_into_chunks", "Split Text Into Chunks"),
+    ("embed_chunks", "Embed Chunks"),
+    ("save_to_pgvector", "Save to PGVector"),
+    ("save_to_minio", "Save to MinIO"),
+)
 
-# MY_STATE_CHOICES = (
-#      ('draft', 'Draft'),
-#      ('approved', 'Approved'),
-#      ('paid', 'Paid'),
-#      ('void', 'Void'),
-#  )
+class DocumentLogic(BaseProcess):
+    process_name = "document_logic"
+    states = MY_STATE_CHOICES
+    transitions = [
+        Transition(
+            action_name="upload_document",
+            sources=["get_document"],
+            target="upload_document",
+            side_effects=[store_document_in_minio],
+        ),
+        Transition(
+            action_name="extract_pdf_text",
+            sources=["upload_document"],
+            target="extract_pdf_text",
+        ),
+        Transition(
+            action_name="split_pdf_into_chunks",
+            sources=["extract_pdf_text"],
+            target="split_pdf_into_chunks",
+        ),
+        Action(action_name="save_to_pgvector", sources=["split_pdf_into_chunks"]),
+        Action(action_name="save_to_minio", sources=["upload_document"]),
+    ]
 
-# def update_data(*args, **kwargs):
-#     return None
-
-# class DocumentLogic(BaseProcess):
-#     states = MY_STATE_CHOICES
-#     transitions = [
-#         Transition(action_name='approve', sources=['draft'], target='approved'),
-#         Transition(action_name='pay', sources=['approve'], target='paid'),
-#         Transition(action_name='void', sources=['draft', 'approved'], target='void'),
-#         Action(action_name='update', side_effects=[update_data]),
-#     ]
 
 class Document(LifecycleModel):
-    title = models.CharField(max_length=255, unique=True, db_index=True)
+    title = models.CharField(max_length=255, unique=True)
     file = models.FileField("File", upload_to="docs")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -35,17 +52,24 @@ class Document(LifecycleModel):
         related_name="documents"
     )
     minio_bucket = models.CharField(max_length=63, default="docs")
+    process_state = models.CharField(
+        max_length=32,
+        choices=MY_STATE_CHOICES,
+        default="get_document",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-id"]
 
     @hook(AFTER_CREATE)
     def initialize_related_models(self):
         def create_related_models():
             DocumentPages.objects.get_or_create(document=self)
-            document_text, _ = DocumentText.objects.get_or_create(document=self)
+
+            document_text, _ = DocumentText.objects.get_or_create(
+                document=self,
+                defaults={"text": ""},
+            )
+
             DocumentTextChunk.objects.get_or_create(document=document_text)
             DocumentChunk.objects.get_or_create(
                 document=self,
@@ -63,7 +87,6 @@ class DocumentPages(models.Model):
     document = models.OneToOneField(
         Document,
         on_delete=models.CASCADE,
-        primary_key=False
     )
     
     def get_pages(self):
@@ -76,7 +99,6 @@ class DocumentText(models.Model):
     document = models.OneToOneField(
         Document,
         on_delete=models.CASCADE,
-        primary_key=False
     )
     text = models.TextField(default="")
 
@@ -92,7 +114,7 @@ class DocumentTextChunk(models.Model):
         on_delete=models.CASCADE,
         related_name="text_chunks"
     )
-    chunks = []
+    content = ""
 
     def split_raw_text_into_chunks(self, text, chunk_size):
         for i in range(0, len(text), chunk_size):
@@ -132,3 +154,6 @@ class DocumentChunk(models.Model):
 
     def __str__(self):
         return f"Document {self.document_id} chunk {self.chunk_index}"
+
+
+ProcessManager.bind_model_process(Document, DocumentLogic, state_field="process_state")
