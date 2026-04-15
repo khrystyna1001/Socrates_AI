@@ -32,5 +32,6 @@ RUN uvx --from huggingface_hub hf auth login && \
 RUN curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.5.7 sh
     # ollama serve && \
     # ollama pull tinyllama
+    # docker exec -it ollama ollama pull tinyllama
 
 COPY . .

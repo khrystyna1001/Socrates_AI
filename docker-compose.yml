@@ -16,7 +16,7 @@ services:
     env_file:
       - .env
     environment:
-      - OLLAMA_BASE_URL=http://localhost:11434
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
     develop:
       watch:
         - action: sync+restart
@@ -45,7 +45,7 @@ services:
     working_dir: /app/main
     command: uv run celery -A backend worker -l info
     environment:
-      - OLLAMA_BASE_URL=http://localhost:11434
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
     volumes:
       - ./src/:/app
     depends_on:

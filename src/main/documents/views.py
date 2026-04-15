@@ -2,10 +2,9 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from .models import Document
-from .serializers import DocumentSerializer
-
-from services.models import MinioStorage
+from .models import Document, DocumentText, DocumentTextChunk, DocumentChunkEmbedding
+from .serializers import DocumentSerializer, DocumentTextSerializer, DocumentTextChunkSerializer, DocumentChunkEmbeddingSerializer
+from .tasks import create_document_with_upload
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
@@ -21,14 +20,32 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if uploaded_file is None:
             raise ValidationError({"file": "This field is required."})
 
-        user_bucket = MinioStorage().build_user_bucket_name(self.request.user.id)
-
-        instance = serializer.save(
-            owner=self.request.user,
-            minio_bucket=user_bucket,
-            file="",
-        )
-        instance.document_logic.upload_document(
-            uploaded_file=uploaded_file,
+        create_document_with_upload(
+            serializer=serializer,
             user=self.request.user,
+            uploaded_file=uploaded_file,
         )
+
+class DocumentTextViewSet(viewsets.ModelViewSet):
+    queryset = DocumentText.objects.all().order_by("-id")
+    serializer_class = DocumentTextSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        pass
+
+class DocumentTextChunkViewSet(viewsets.ModelViewSet):
+    queryset = DocumentTextChunk.objects.all().order_by("-id")
+    serializer_class = DocumentTextChunkSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        pass
+
+class DocumentChunkEmbeddingViewSet(viewsets.ModelViewSet):
+    queryset = DocumentChunkEmbedding.objects.all().order_by("-id")
+    serializer_class = DocumentChunkEmbeddingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        pass
