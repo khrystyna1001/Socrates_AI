@@ -87,9 +87,11 @@ import { useRouter } from "vue-router";
 import axios from "axios";
 import Header from "@/components/Header.vue";
 
+const token = localStorage.getItem("accessToken");
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_DOC_API_BASE_URL || "/doc_api",
-  headers: {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3NTU0MTUyLCJpYXQiOjE3NzYyNTgxNTIsImp0aSI6IjYxYmJjODFiMDZjYzRkMjliNDAzYTE0NGJiNTJmMzcwIiwidXNlcl9pZCI6IjEifQ.o1p2_QprapMLVRlBRHahzk9EhJAnSkE-If5MXFRxzbE'},
+  headers: {'Authorization': `Bearer ${token}`},
   withCredentials: true,
 });
 

@@ -52,22 +52,24 @@ class DocumentLogic(BaseProcess):
 
 
 class Document(LifecycleModel):
-    title = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=255, unique=True, verbose_name="Title")
     file = models.FileField("File", upload_to="docs")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
 
-    minio_bucket = models.CharField(max_length=63, default="docs")
+    minio_bucket = models.CharField(max_length=63, default="docs", verbose_name="User's MinIO Bucket Name")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="documents"
+        related_name="documents",
+        verbose_name="Document Owner"
     )
     
     process_state = models.CharField(
         max_length=32,
         choices=MY_STATE_CHOICES,
         default="get_document",
+        verbose_name="Document Processing State",
     )
 
     @hook(AFTER_CREATE)
@@ -95,9 +97,10 @@ class DocumentPages(models.Model):
     document = models.OneToOneField(
         Document,
         on_delete=models.CASCADE,
+        verbose_name="Document Pages"
     )
     
-    pages = models.PositiveIntegerField()
+    pages = models.PositiveIntegerField(verbose_name="Number of Pages")
 
     def __str__(self):
         return self.pages
@@ -107,8 +110,9 @@ class DocumentText(models.Model):
     document = models.OneToOneField(
         Document,
         on_delete=models.CASCADE,
+        verbose_name="Document Text"
     )
-    text = models.TextField()
+    text = models.TextField(verbose_name="Document Text")
 
     def __str__(self):
         return self.text[:60] if self.text else ""
@@ -117,10 +121,11 @@ class DocumentTextChunk(models.Model):
     document = models.ForeignKey(
         DocumentText,
         on_delete=models.CASCADE,
-        related_name="text_chunks"
+        related_name="text_chunks",
+        verbose_name="Document Text Chunk",
     )
-    content = models.TextField(default="", blank=True)
-    chunk_index = models.PositiveIntegerField()
+    content = models.TextField(default="", blank=True, verbose_name="Chunk Content")
+    chunk_index = models.PositiveIntegerField(verbose_name="Chunk Index")
 
     def __str__(self):
         return self.content[:65] if self.content else ""
@@ -131,11 +136,12 @@ class DocumentChunkEmbedding(models.Model):
     document = models.ForeignKey(
         Document,
         on_delete=models.CASCADE,
-        related_name="chunks"
+        related_name="chunks",
+        verbose_name="Document Chunk Embedding",
     )
 
-    chunk_index = models.PositiveIntegerField()
-    embedding = VectorField(dimensions=768, null=True, blank=True)
+    chunk_index = models.PositiveIntegerField(verbose_name="Chunk Index")
+    embedding = VectorField(dimensions=768, null=True, blank=True, verbose_name="Chunk Embedding")
 
     class Meta:
         ordering = ["document_id", "chunk_index"]

@@ -7,17 +7,16 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 import os
 
-# fill verbose_name fields
-
 class BARTQuery(models.Model):
     document = models.ForeignKey(
         Document,
         on_delete=models.CASCADE,
         related_name="queries",
+        verbose_name="Query Model"
     )
-    prompt = models.TextField(max_length=2000)
-    response = models.TextField(blank=True, default="")
-    created_at = models.DateTimeField(auto_now_add=True)
+    prompt = models.TextField(max_length=2000, verbose_name="Prompt")
+    llm_response = models.TextField(blank=True, default="", verbose_name="Response")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
 
     class Meta:
         ordering = ["-id"]
@@ -25,10 +24,9 @@ class BARTQuery(models.Model):
     def __str__(self):
         return f"Query {self.id} for document {self.document_id}"
 
-    # avoid response naming convention
-    def set_response(self, text: str):
-        self.response = text
-        self.save(update_fields=["response"])
+    def set_llm_response(self, text: str):
+        self.llm_response = text
+        self.save(update_fields=["llm_response"])
 
 class EmbeddingModel(models.Model):
     embedding_model = HuggingFaceEmbeddings(

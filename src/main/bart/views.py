@@ -14,7 +14,7 @@ class BARTViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        instance = serializer.save(response="")
+        instance = serializer.save(llm_response="")
 
         try:
             q_vec = embed_user_prompt(instance)
@@ -43,9 +43,9 @@ class BARTViewSet(viewsets.ModelViewSet):
                 "id": query.id,
                 "document_id": query.document_id,
                 "prompt": query.prompt,
-                "response": query.response,
+                "llm_response": query.llm_response,
                 "created_at": query.created_at,
-                "is_ready": bool(query.response),
+                "is_ready": bool(query.llm_response),
             },
             status=status.HTTP_200_OK,
         )

@@ -32,7 +32,7 @@ def invoke_bart_response(query, context):
         f"Question:\n{query.prompt}\n"
     )
     answer = str(llm.invoke(final_prompt))
-    query.set_response(answer)
+    query.set_llm_response(answer)
 
     return answer
 

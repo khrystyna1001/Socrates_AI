@@ -80,6 +80,7 @@ export const useAuthStore = defineStore('auth', {
           const maybeUser = typeof data === 'object' && data !== null && 'user' in data ? data.user : null
           this.isAuthenticated = true
           this.user = maybeUser
+
           this.saveState()
           if (router) {
             await router.push('/')
@@ -160,6 +161,9 @@ export const useAuthStore = defineStore('auth', {
         this.isAuthenticated = false
         this.saveState()
 
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
         if (router) {
           await router.push('/login')
         }
@@ -187,8 +191,10 @@ export const useAuthStore = defineStore('auth', {
           credentials: 'include',
         })
 
-        console.log(response)
-        console.log(response.access)
+        const data = await response.json().catch(() => ({}))
+        
+        localStorage.setItem("accessToken", data.access);
+        localStorage.setItem("refreshToken", data.refresh);
 
         if (response.ok) {
           return {
@@ -207,7 +213,38 @@ export const useAuthStore = defineStore('auth', {
       try {
         await this.setCsrfToken()
 
-        const response = await fetch(`${AUTH_BASE_URL}/token`, {
+        const response = await fetch(`${AUTH_BASE_URL}/token/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+          credentials: 'include',
+        })
+
+        if (response.ok) {
+          return {
+            success: true,
+            message: 'Token created successfully.',
+          }
+        }
+
+      } catch (error) {
+        console.error('Failed to create token', error)
+        this.user = null
+        this.isAuthenticated = false
+      }
+    },
+
+    async verifyToken(username: string, password: string) {
+      try {
+        await this.setCsrfToken()
+
+        const response = await fetch(`${AUTH_BASE_URL}/token/verify`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

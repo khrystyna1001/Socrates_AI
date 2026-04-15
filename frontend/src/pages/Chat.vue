@@ -66,7 +66,7 @@
 
           <div class="rounded-lg border border-cyan-800/50 bg-cyan-950/20 p-4">
             <p class="text-sm text-cyan-200">Answer</p>
-            <p class="mt-2 whitespace-pre-wrap leading-7 text-slate-100">{{ latestResponse.response }}</p>
+            <p class="mt-2 whitespace-pre-wrap leading-7 text-slate-100">{{ latestResponse.llm_response }}</p>
           </div>
         </div>
       </article>
@@ -80,15 +80,17 @@ import { useRouter } from "vue-router";
 import axios from "axios";
 import Header from "@/components/Header.vue";
 
+const token = localStorage.getItem("accessToken");
+
 const docsApi = axios.create({
   baseURL: import.meta.env.VITE_DOC_API_BASE_URL || "/doc_api",
-  headers: {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3NTU0MTUyLCJpYXQiOjE3NzYyNTgxNTIsImp0aSI6IjYxYmJjODFiMDZjYzRkMjliNDAzYTE0NGJiNTJmMzcwIiwidXNlcl9pZCI6IjEifQ.o1p2_QprapMLVRlBRHahzk9EhJAnSkE-If5MXFRxzbE'},
+  headers: {'Authorization': `Bearer ${token}`},
   withCredentials: true,
 });
 
 const bartApi = axios.create({
   baseURL: import.meta.env.VITE_BART_API_BASE_URL || "/bart_api",
-  headers: {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3NTU0MTUyLCJpYXQiOjE3NzYyNTgxNTIsImp0aSI6IjYxYmJjODFiMDZjYzRkMjliNDAzYTE0NGJiNTJmMzcwIiwidXNlcl9pZCI6IjEifQ.o1p2_QprapMLVRlBRHahzk9EhJAnSkE-If5MXFRxzbE'},
+  headers: {'Authorization': `Bearer ${token}`},
   withCredentials: true,
 });
 
