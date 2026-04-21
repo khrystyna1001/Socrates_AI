@@ -46,6 +46,8 @@ services:
     command: uv run celery -A backend worker -l info
     environment:
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    env_file:
+      - .env
     volumes:
       - ./src/:/app
     depends_on:
@@ -60,7 +62,9 @@ services:
     working_dir: /app/main
     command: uv run celery -A backend beat -l info
     environment:
-      - OLLAMA_BASE_URL=http://localhost:11434
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    env_file:
+      - .env
     volumes:
       - ./src/:/app
     depends_on:
@@ -74,7 +78,7 @@ services:
     working_dir: /app/main
     command: uv run celery -A backend flower --port=5555
     environment:
-      - OLLAMA_BASE_URL=http://localhost:11434
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
     ports:
       - "5555:5555"
     depends_on:

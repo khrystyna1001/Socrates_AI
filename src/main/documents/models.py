@@ -1,11 +1,10 @@
-from django.db import models, transaction
+from django.db import models
 from django.conf import settings
 from pgvector.django import HnswIndex, VectorField
 from pypdf import PdfReader
 
 from django_logic import Process as BaseProcess, ProcessManager, Transition, Action
-from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
-from .tasks import extract_raw_text_from_pdf, split_raw_text_into_chunks, embed_document_chunks, save_to_pgvector, store_document_in_minio, process_document_pipeline
+from .tasks import extract_raw_text_from_pdf, split_raw_text_into_chunks, embed_document_chunks, save_to_pgvector, store_document_in_minio
 
 
 MY_STATE_CHOICES = (
@@ -51,9 +50,9 @@ class DocumentLogic(BaseProcess):
     ]
 
 
-class Document(LifecycleModel):
-    title = models.CharField(max_length=255, unique=True, verbose_name="Title")
-    file = models.FileField("File", upload_to="docs")
+class Document(models.Model):
+    title = models.CharField(max_length=500, unique=True, verbose_name="Title")
+    file = models.FileField("File", upload_to="docs", max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
 
@@ -72,24 +71,26 @@ class Document(LifecycleModel):
         verbose_name="Document Processing State",
     )
 
-    @hook(AFTER_CREATE)
-    def initialize_related_models(self):
-        def create_related_models():
-            process_document_pipeline.delay(self.pk)
-
-        transaction.on_commit(create_related_models)
-
     def __str__(self):
         return self.title
     
     def get_raw_text(self, pages):
+        text = ""
         for page in pages:
-            self.text += page.extract_text() + "\n"
-        return self.text
+            text += page.extract_text() + "\n"
+        return text
     
     def get_pages(self):
-        self.document.file.open("rb")
-        reader = PdfReader(self.document.file)
+        from services.models import MinioStorage
+        storage = MinioStorage()
+    
+        f = storage.get_file_stream(self.minio_bucket, self.file.name)
+        
+        import io
+        stream = io.BytesIO(f.read())
+        f.close()
+        
+        reader = PdfReader(stream)
         return reader.pages
     
 
@@ -103,7 +104,7 @@ class DocumentPages(models.Model):
     pages = models.PositiveIntegerField(verbose_name="Number of Pages")
 
     def __str__(self):
-        return self.pages
+        return str(self.pages)
 
 
 class DocumentText(models.Model):

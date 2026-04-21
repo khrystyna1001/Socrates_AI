@@ -1,11 +1,9 @@
-import os
 
-from celery import shared_task
 from celery.utils.log import get_task_logger
 from pgvector.django import CosineDistance
 
 from .models import LLMModel, EmbeddingModel
-from documents.models import DocumentChunkEmbedding
+from documents.models import DocumentChunkEmbedding, DocumentText, DocumentTextChunk
 
 logger = get_task_logger(__name__)
 
@@ -21,7 +19,16 @@ def read_user_prompt(query, q_vec, top_k=5):
         .annotate(distance=CosineDistance("embedding", q_vec))
         .order_by("distance")[:top_k]
     )
-    context = "\n\n".join(chunk.chunk.content for chunk in chunks_qs)
+    indices = [emb.chunk_index for emb in chunks_qs]
+
+    document_text = DocumentText.objects.get(document=query.document)
+    context_chunks = (
+        DocumentTextChunk.objects
+        .filter(document=document_text, chunk_index__in=indices)
+        .order_by('chunk_index')
+    )
+    
+    context = "\n\n".join(c.content for c in context_chunks)
     return context
 
 def invoke_bart_response(query, context):

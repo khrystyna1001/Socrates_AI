@@ -1,5 +1,4 @@
 from django.db import models
-from documents.models import Document
 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_ollama.llms import OllamaLLM
@@ -8,6 +7,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 
 class BARTQuery(models.Model):
+    from documents.models import Document
     document = models.ForeignKey(
         Document,
         on_delete=models.CASCADE,
@@ -39,7 +39,8 @@ class EmbeddingModel(models.Model):
 class LLMModel(models.Model):
     llm = OllamaLLM(
             model="tinyllama:latest",
-            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434"),
+            timeout=120
         )
     
     def get_llm(self):
