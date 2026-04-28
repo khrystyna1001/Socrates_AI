@@ -1,15 +1,19 @@
-from django.shortcuts import render
 from django.http import JsonResponse
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
+from django.views.decorators.csrf import ensure_csrf_cookie
 import json
  
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
 from .forms import CreateUserForm
 
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.views import APIView
+
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework.response import Response
+
+from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
 @ensure_csrf_cookie
@@ -32,17 +36,10 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return JsonResponse({'message': 'Logged out'})
+    response = Response({"detail": "Logged out"})
+    response.delete_cookie("refresh_token") 
+    return response
 
-@require_http_methods(['GET'])
-def user(request):
-    if request.user.is_authenticated:
-        return JsonResponse(
-            {'username': request.user.username, 'username': request.user.username}
-        )
-    return JsonResponse(
-        {'message': 'Not logged in'}, status=401
-    )
  
 @require_http_methods(['POST'])
 def register(request):
@@ -56,6 +53,24 @@ def register(request):
         return JsonResponse({'error': errors}, status=400)
 
 # simpleJWT
-class MyTokenObtainPairView(TokenObtainPairView):
+class CookieTokenRefreshView(APIView):
     def post(self, request):
-        return JsonResponse(request)
+        refresh_token = request.COOKIES.get("refresh_token")
+        if not refresh_token:
+            return Response({"detail": "No refresh token"}, status=400)
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+            return Response({"access": access_token})
+        except Exception:
+            raise InvalidToken("Invalid refresh token")
+        
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        u = request.user 
+        return Response({
+            'id': u.id, 
+            'username': u.username
+        })

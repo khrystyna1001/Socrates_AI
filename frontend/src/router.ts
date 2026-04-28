@@ -8,6 +8,7 @@ import Home from './pages/Home.vue';
 
 import LoginView from './auth/Login.vue';
 import SignUpView from './auth/SignUp.vue';
+import ProfileView from './auth/Profile.vue';
 import LogoutView from './auth/Logout.vue';
 
 const routes = [
@@ -18,6 +19,7 @@ const routes = [
   { path: '/guide', component: GuideView },
   { path: '/login', component: LoginView },
   { path: '/signup', component: SignUpView },
+  { path: '/profile', component: ProfileView },
   { path: '/logout', component: LogoutView }
 ];
 

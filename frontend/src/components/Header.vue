@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-50 transition-all duration-300 bg-slate-900">
+  <header class="sticky top-0 transition-all duration-300 bg-slate-900">
     <section :class="['w-full', isScrolled ? 'backdrop-blur shadow-md py-2': 'py-4']">
         <div class="max-2-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-6">
@@ -18,11 +18,16 @@
                     </button>
                     <div
                     v-if="openUserMenu"
-                    v-for="item in userMenuItems" :key="item.id"
                     class="absolute right-0 top-12 w-48 rounded-lg border border-slate-700 bg-slate-800 shadow-lg z-50"
                     >
-                    <button class="block w-full px-4 py-2 text-left text-white hover:bg-slate-700">
-                        <RouterLink :to="item.path" class="hover:text-indigo-300 transition-colors">{{  item.name  }}</RouterLink>
+                    <button 
+                        v-for="item in userMenuItems" 
+                        :key="item.id"
+                        class="block w-full px-4 py-2 text-left text-white hover:bg-slate-700 border-b border-slate-700 last:border-none"
+                    >
+                        <RouterLink :to="item.path" class="hover:text-indigo-300 transition-colors">
+                        {{ item.name }}
+                        </RouterLink>
                     </button>
                     </div>
                 </aside>
@@ -31,7 +36,7 @@
     </section>
     <nav class="flex items-center h-24" aria-label="Main navigation">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <ul class="text-2xl hidden md:flex justify-center py-3 flex-wrap gap-x-20 font-medium text-cyan-500" :style="{ textShadow: '1px 1px 1px cyan'}">
+            <ul class="text-2xl hidden md:flex justify-center py-3 flex-wrap gap-x-20 font-medium text-cyan-500">
                 <li v-for="item in navItems" :key="item.id">
                     <RouterLink :to="item.path" class="hover:text-indigo-300 transition-colors">{{  item.name  }}</RouterLink>
                 </li>

@@ -271,13 +271,14 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async fetchUser() {
+    async fetchUser(token: string | null = null) {
       try {
-        const response = await fetch(`${AUTH_BASE_URL}/user`, {
+        const response = await fetch(`${AUTH_BASE_URL}/profile/`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken'),
+            'Authorization': `Bearer ${token}`,
           },
         })
         if (response.ok) {

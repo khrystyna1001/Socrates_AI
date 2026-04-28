@@ -1,8 +1,8 @@
 <template>
   <Header />
-  <main class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-slate-100">
+  <main class="min-h-screen">
     <section class="mx-auto max-w-6xl px-6 py-16 md:py-24">
-      <p class="inline-block rounded-full border border-cyan-600/40 bg-cyan-600/10 px-4 py-1 text-sm tracking-wide text-cyan-200">
+      <p class="inline-block rounded-full border border-cyan-600/40 bg-cyan-600/10 px-4 py-1 text-sm tracking-wide text-slate-900">
         About SocratesAI
       </p>
       <h1 class="mt-5 max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">
@@ -28,7 +28,7 @@
           Upload Document
         </button>
         <button
-          class="rounded-xl border border-cyan-300/50 bg-transparent px-6 py-3 text-lg font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+          class="rounded-xl border border-cyan-300/50 bg-transparent px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-cyan-300/10"
           @click="goToChat"
         >
           Chat with Socrates

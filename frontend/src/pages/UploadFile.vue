@@ -1,14 +1,14 @@
 <template>
   <Header />
-  <main class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-slate-100">
+  <main class="min-h-screen">
     <section class="mx-auto max-w-6xl px-6 py-16 md:py-20">
-      <p class="inline-block rounded-full border border-cyan-600/40 bg-cyan-600/10 px-4 py-1 text-sm tracking-wide text-cyan-200">
+      <p class="inline-block rounded-full border border-cyan-600/40 bg-cyan-600/10 px-4 py-1 text-sm tracking-wide text-slate-900">
         Upload Documents
       </p>
       <h1 class="mt-5 max-w-4xl text-4xl font-semibold leading-tight md:text-5xl">
         Add your PDF and start indexing.
       </h1>
-      <p class="mt-4 max-w-3xl text-slate-300">
+      <p class="mt-4 max-w-3xl text-slate-900">
         Uploaded files are stored in MinIO, chunked and embedded in the background, then made ready for chat.
       </p>
     </section>
